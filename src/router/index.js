@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Index from '@/page/index'
 import Content from '@/page/content'
 import GoodsList from '@/components/goodslist'
+import Goods from '@/components/goods'
 
 Vue.use(Router)
 
@@ -18,9 +19,13 @@ export default new Router({
       }]
     },
     {
-      path:'/content/:id',
-      component:Content,
-      name: 'content' 
+      path:'/goodsdetail/:id',
+      component:Index,
+      name:'goodsdetail',
+      children:[{
+        path:'',
+        component:Goods
+      }]
     }
   ]
 })
