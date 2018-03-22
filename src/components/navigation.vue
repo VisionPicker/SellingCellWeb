@@ -4,15 +4,13 @@
     <template>
       <el-carousel :interval="3000" arrow="always" height="200px">
         <el-carousel-item v-for="item in recommendation" :key="item.id">
-          <h3>{{ item.name }}</h3>
-          <span>{{item.title}}</span>
-          <router-link :to="{ path: '/good/'+item.id }">Go to good_detail_page</router-link>
+          <img :src="item.img" width="1500" height="200"/>
         </el-carousel-item>
       </el-carousel>
     </template>
   </div>
     <el-menu
-      :default-active="index"
+      default-active="index"
       mode="horizontal"
       background-color="#303133"
       text-color="#909399"
@@ -20,24 +18,24 @@
       @select="handleSelect"
       >
       <el-menu-item index="index"><i class="el-icon-tickets"></i>商品浏览</el-menu-item>
-      <el-menu-item index="cart" v-if="loginInfo.authorization&&(loginInfo.role=='customer')">
+      <el-menu-item index="cart" v-if="this.$store.state.authorization&&(this.$store.state.role=='customer')">
         <i class="el-icon-goods"></i>购物车
       </el-menu-item>
-      <el-submenu index="customer_account" v-if="loginInfo.authorization&&(loginInfo.role=='customer')">
-          <template slot="title" >账号[ {{loginInfo.username}} ]</template>
+      <el-submenu index="customer_account" v-if="this.$store.state.authorization&&(this.$store.state.role=='customer')">
+          <template slot="title" >账号[ {{this.$store.state.username}} ]</template>
           <el-menu-item index="orders" >订单</el-menu-item>
           <el-menu-item index="logout">注销</el-menu-item>
       </el-submenu>
-      <el-menu-item index="publish" v-if="loginInfo.authorization&&(loginInfo.role=='seller')">
+      <el-menu-item index="puton" v-if="this.$store.state.authorization&&(this.$store.state.role=='seller')">
          <i class="el-icon-circle-plus-outline"></i>发布商品
       </el-menu-item>
-      <el-submenu index="seller_account" v-if="loginInfo.authorization&&(loginInfo.role=='seller')">
-          <template slot="title" >账号[ {{loginInfo.username}} ]</template>
+      <el-submenu index="seller_account" v-if="this.$store.state.authorization&&(this.$store.state.role=='seller')">
+          <template slot="title" >账号[ {{this.$store.state.username}} ]</template>
           <el-menu-item index="logout">
             注销
           </el-menu-item>
       </el-submenu>
-      <el-menu-item index="login" v-if="!loginInfo.authorization">登录</el-menu-item>
+      <el-menu-item index="login" v-if="!this.$store.state.authorization">登录</el-menu-item>
     </el-menu>
 
     <el-dialog
@@ -66,23 +64,20 @@
 </template>
 <script>
 export default {
+  created:function(){
+    this.loginInfo=this.$localstore.fetch()
+  },
+  //mounted方法是在vm.el属性替换el时，页面还未挂载
+  mounted:function(){
+    
+  },
   data:function (){
     return{
       activeIndex:'index',
-      loginInfo:
-      {
-        authorization:false,
-        role:'customer',
-        username: '',
-        token:'',
-        userid:''
-        },
+      loginInfo:{},
       error_show:false,//展示提示信息的框
       recommendation:[
-        {name:'head first java',title:'everyone needs one',id:1},
-        {name:'spring-boot实战',title:'你还在为自己的大作业担忧吗',id:2},
-        {name:'算法导论',title:'你也许看不懂，但是你需要',id:3},
-        {name:'Java虚拟机第二版',title:'面试必看，大家加油做好笔记',id:4}
+        {name:'算法导论',title:'你也许看不懂，但是你需要',id:3,img:"./static/image/title.jpg"},
       ],
        dialogVisible: false,
        login_params:{
@@ -95,13 +90,22 @@ export default {
   watch:{
     dialogVisible:function(val){
       if(this.dialogVisible==false){
-        this.login_params.name=''
-        this.login_params.password=''
+        this.login_params.name=null
+        this.login_params.password=null
       }
     },
     login_params:{
       handler(oldValue,newValue){
         this.error_show=false;
+      },
+      deep:true
+    },
+    loginInfo:{
+      handler(newLoginInfo){
+        //出现变化的时候更新login信息和本地存储
+        console.log('loginInfo出现变化')
+        this.$store.commit('setUser',this.loginInfo)
+        this.$localstore.save(this.loginInfo)      
       },
       deep:true
     }
@@ -120,13 +124,15 @@ export default {
       var md5_password=this.$md5(this.login_params.password)
       this.$api.post("login",{username:this.login_params.name,password:md5_password},response=>{    
         console.log('登录成功')  
-        console.log('用户名:'+response.name)
-        console.log('角色'+response.role)
+        console.log('用户名:'+response.data.username)
+        console.log('角色'+response.data.role)
         this.dialogVisible=false;
       this.loginInfo.authorization=true
-      this.loginInfo.role=response.role
-      this.loginInfo.userid=response.userid
-      this.loginInfo.username=response.name
+      this.loginInfo.role=response.data.role
+      this.loginInfo.userid=response.data.userid
+      this.loginInfo.username=response.data.username
+      this.$store.commit('setUser',this.loginInfo)
+      this.$localstore.save(this.loginInfo)   
       this.error_show=false;
       },response=>{
         this.error_show=true;
@@ -135,13 +141,28 @@ export default {
     },
     logout:function(){
       console.log("注销")
-      this.loginInfo.authorization=false;
-      this.loginInfo.role=''
+      this.$api.post('/user/logout',null,response=>{
+        this.$store.commit('clearUser')
+        this.$localstore.clear()//删除本地缓存
+        this.$router.push("/")
+      },response=>{
+        this.$store.commit('clearUser')
+        this.$localstore.clear()//删除本地缓存
+        this.$router.push("/")
+      })
+      
     },
     handleSelect:function(index,indexPath){
       console.log("导航栏选择: "+index)
       switch(index){
+        case 'index' :
+          this.$router.push('/allgoods')
+          break
         case 'orders':
+          this.$router.push('/orders')
+          break
+        case 'puton':
+          this.$router.push('/goods/puton')
           break
         case 'logout': 
           this.logout()
@@ -149,13 +170,16 @@ export default {
         case 'login':
           this.openLoginDialog()
           break
+        case 'cart':
+          this.$router.push('/shoppingcart')
         default:break
       }
     },
+    
     showCart:function(){
       //展示购物车
       console.log("展示购物车")
-    }
+    },
   }
 }
 </script>
@@ -163,8 +187,8 @@ export default {
  .el-carousel__item h3 {
     color: #475669;
     font-size: 18px;
-    opacity: 0.75;
-    line-height:100px;
+    opacity: 1.0;
+    line-height:200px;
     margin: 0;
   }
   

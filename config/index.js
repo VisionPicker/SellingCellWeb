@@ -15,6 +15,11 @@ module.exports = {
         target:'http://localhost:8807',
         secure:false,
         changeOrigin:false,
+      },
+      '/images/*':{
+        target:'http://localhost:8807',
+        secure:false,
+        changeOrigin:false,
       }
     },
 
