@@ -94,7 +94,7 @@ export default {
   },
   methods:{
       getShoppingcartItems:function(){
-          this.$api.post("user/shoppingcart/show",null,response=>{
+          this.$api.post("user/customer/shoppingcart/show",null,response=>{
               this.items=response.data
               for(var item of this.items){
                   this.$set(this.goods_quantity,item.goodsid,item.quantity)//vue中在利用对象进行监听的时候，需要利用用到Vue.set
@@ -105,13 +105,20 @@ export default {
           console.log("商品号:"+goodsid+" 数量："+quantity)
       },
       balance(){
-          this.$api.post("user/shoppingcart/balance",null,response=>{
+          this.$confirm('确定购买当前商品吗?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+             this.$api.post("user/customer/shoppingcart/balance",null,response=>{
               this.items=[]
               this.$message({
                   message:"下单成功，快去看看吧~",
                   type:"success"
               })
           },null)
+          }).catch(() => {
+            });
       },
       goBack(){
           window.history.length>1
@@ -125,7 +132,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-            this.$api.delete("user/shoppingcart/remove/"+goods.goodsid,null,
+            this.$api.delete("user/customer/shoppingcart/remove/"+goods.goodsid,null,
                 response=>{
                     this.$message({
                     type: 'success',
@@ -183,7 +190,7 @@ export default {
       },
       updateQuantity(goodsid,quantity,success,failure){
           var cartitem={goodsid:goodsid,quantity:quantity}
-          this.$api.post("user/shoppingcart/modify",cartitem,success,failure)
+          this.$api.post("user/customer/shoppingcart/modify",cartitem,success,failure)
       }
 
   }

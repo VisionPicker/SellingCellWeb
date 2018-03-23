@@ -10,7 +10,7 @@
         </el-select>
         <div class="clear" ></div> 
         <div class="goodsplat" v-for="index in goodslist" v-bind:key="index.goodsid">
-            <div>   <img :src="index.img" width="270" height="270"></div>
+            <div class="goodsplat-img">   <img :src="index.img" width="270" height="270" float="left" onerror="this.src='static/image/default.jpg'"></div>
             <div>
                 <div class="list-price">￥{{index.price}}</div>
                 <div class="list-sold" v-if="role=='seller'">
@@ -49,7 +49,7 @@ export default {
 
   },
   mounted:function(){
-      this.goodslist=this.getAllGoods()
+      this.getAllGoods()
   },
   computed:{
       getRole:function(){
@@ -91,13 +91,13 @@ export default {
 
     },
     getNotPurchasedGoods(){
-        this.$api.get('/user/goods/info/customer/not_purchased',null,
+        this.$api.get('/user/customer/goods/list/not_purchased',null,
         response=>{
             this.goodslist=response.data
         },null)
     },
     getPurchasedGoods(){
-        this.$api.get('/user/goods/info/customer/purchased',null,
+        this.$api.get('/user/customer/goods/list/purchased',null,
         response=>{
             this.goodslist=response.data
         },null)
@@ -109,7 +109,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-            this.$api.delete("user/goods/putoff/"+goodsid,null,
+            this.$api.delete("user/seller/goods/putoff/"+goodsid,null,
                 response=>{
                     this.$message({
                     type: 'success',
@@ -189,6 +189,9 @@ export default {
     margin-top:10px;
     margin-left:25px;
     background:  #f9fafc;
-    
-}
+    }
+    .goodsplat-img{
+        width: 270px;
+        height: 270px;
+    }
 </style>

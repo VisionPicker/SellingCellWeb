@@ -19,7 +19,7 @@
                               <template slot-scope="scope">
                                   <div class="orders-little-img">
                                      <el-tooltip placement="right" content="此页面的图片和标题都属于交易快照，点击链接进入查看实时商品信息">
-                                      <img width="100" height="100" :src="scope.row.img"/>
+                                      <img width="100" height="100" :src="scope.row.img" onerror="this.src='static/image/default.jpg'"/>
                                      </el-tooltip>
                                   </div>
                                   <div class="orders-simple-title">

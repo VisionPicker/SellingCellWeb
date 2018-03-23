@@ -12,13 +12,13 @@
             <div class=" bg-purple-light" >
                 <el-upload
                 class="avatar-uploader"
-                action="api/images/upload"
+                action="api/user/seller/images/upload"
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
                 :before-upload="beforeAvatarUpload"
                 v-bind:disabled="not_upload"
                 >
-                <img v-if="showImage" :src="showImage" class="avatar">
+                <img v-if="showImage" :src="showImage" class="avatar" >
                 <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                 </el-upload>
                 <span>点击上传商品图片，图片大小不超过1MB</span>
@@ -158,7 +158,18 @@ export default {
                 this.goods.img=res.data.image//上传成功后在服务器上的名称
                 this.showImage = URL.createObjectURL(file.raw);
             }else{
-                this.$message.error("图片上传失败！")
+                if(res.code==1){
+                    this.$message({
+                        message:"尚未登录或登录超时,请重新登录！",
+                        type:"error"
+                    })
+                    this.$store.commit("clearUser")
+                    this.$localstore.clear()
+                    this.$router.push("/")
+                }else{
+                    this.$message.error("图片上传失败！")
+                }
+               
             }
            
         },
@@ -192,11 +203,33 @@ export default {
         cancel:function(){
             this.goBack()
         },
+        testGoodsValid(){
+            if(this.goods.title==null||this.goods.title.length<2||this.goods.introduction.length>80){
+                return false
+            }
+            if(this.goods.introduction==null||this.goods.introduction.length<2||this.goods.introduction.length>140){
+                return false
+            }
+            if(this.goods.detail==null||this.goods.detail.length<2||this.goods.detail.length>1000){
+                return false
+            }
+            if(this.goods.price==null||this.goods.price<0||this.goods.price>1000000000){
+                return false
+            }
+            return true
+        },
         modify:function(){
             if(!this.not_upload){
                 this.goods.img="/images/show/"+this.goods.img //当通过本地上传的方式，需要加上路径
             }
-            this.$api.post('user/goods/modify',this.goods,response=>{
+            if(!this.testGoodsValid()){
+                this.$message({
+                    message:"输入的商品的信息有误，请重新检查",
+                    type:"info"
+                })
+                return
+            }
+            this.$api.post('user/seller/goods/modify',this.goods,response=>{
                 console.log('修改商品成功')
                 this.$message({
                          message:'修改商品成功!',
@@ -210,7 +243,7 @@ export default {
                 this.goods.img="/images/show/"+this.goods.img //当通过本地上传的方式，需要加上路径
             }
             if(this.goods.goodsid==-1){
-                 this.$api.post("user/goods/puton/",this.goods,response=>{
+                 this.$api.post("user/seller/goods/puton/",this.goods,response=>{
                      console.log('发布商品成功')
                      this.$message({
                          message:'发布商品成功!',

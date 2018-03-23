@@ -10,7 +10,9 @@
         <el-col :span="2"><div class="grid-content"></div></el-col>
         <el-col :span="7" class="grid-content">
             <div class="grid-content bg-purple-light" >
-                <img :src="goods.img" height="400" width="400"/>
+                <div height="400" width="400">
+                <img :src="goods.img" height="400" width="400" onerror="this.src='static/image/default.jpg'" />
+                </div>
             </div>
 
         </el-col>
@@ -60,7 +62,7 @@ export default {
                 price: 0,
                 introduction:'无 ',
                 detail:'无 ',
-                img:'/static/image/default.jpg',
+                img:'',
                 sold_quantity:0,
                 purchased:false
 
@@ -105,7 +107,7 @@ export default {
         addtoCart:function(quantity){
             console.log("加入购物车:"+quantity)
             if(quantity>0){
-                this.$api.post("/user/shoppingcart/add",{goodsid:this.goods.goodsid,quantity:quantity},
+                this.$api.post("/user/customer/shoppingcart/add",{goodsid:this.goods.goodsid,quantity:quantity},
                 response=>{
                     this.$message({
                         message:"已加入购物车",
@@ -125,7 +127,7 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
             }).then(() => {
-                this.$api.delete("user/goods/putoff/"+this.goods.goodsid,null,
+                this.$api.delete("user/seller/goods/putoff/"+this.goods.goodsid,null,
                     response=>{
                         this.$message({
                         type: 'success',

@@ -47,7 +47,7 @@
       <span>&nbsp;</span>
       <el-input type="password" v-model="login_params.password" placeholder="密码" ></el-input>
       <el-alert
-          title="用户名或密码错误"
+          :title="error_text"
           type="error"
           v-if="error_show"
           :closable="false"
@@ -83,7 +83,8 @@ export default {
        login_params:{
          name:'',
          password:''
-       }
+       },
+       error_text:""
     }
   },
 
@@ -121,6 +122,11 @@ export default {
     login:function(){
       console.log('用户名:'+this.login_params.name)
       console.log('密码:'+this.login_params.password)
+      if(!this.checkName(this.login_params.name)||!this.checkPassword(this.login_params.password)){
+        this.error_text="用户名或密码输入格式错误"
+        this.error_show=true
+        return
+      }
       var md5_password=this.$md5(this.login_params.password)
       this.$api.post("login",{username:this.login_params.name,password:md5_password},response=>{    
         console.log('登录成功')  
@@ -135,6 +141,7 @@ export default {
       this.$localstore.save(this.loginInfo)   
       this.error_show=false;
       },response=>{
+        this.error_text="用户名或密码错误"
         this.error_show=true;
       })
       
@@ -151,6 +158,14 @@ export default {
         this.$router.push("/")
       })
       
+    },
+    checkName(temp){
+      var reg=new RegExp(/^[a-zA-Z0-9_]{4,16}$/)
+      return reg.test(temp)
+    },
+    checkPassword(temp){
+      var reg=new RegExp(/^[a-zA-Z0-9_]{4,20}$/)
+      return reg.test(temp)
     },
     handleSelect:function(index,indexPath){
       console.log("导航栏选择: "+index)

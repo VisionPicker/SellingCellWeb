@@ -68,5 +68,8 @@ export default {
     },
     delete: function (url, params, success, failure) {
       return apiAxios('DELETE', url, params, success, failure)
+    },
+    setResponseInterceptor:function(response,error){
+        axios.interceptors.response.use(response,error)
     }
 }
