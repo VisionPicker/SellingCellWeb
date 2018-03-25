@@ -16,12 +16,11 @@
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
                 :before-upload="beforeAvatarUpload"
-                v-bind:disabled="not_upload"
+                v-bind:disabled="method=='address'"
                 >
-                <img v-if="showImage" :src="showImage" class="avatar" >
+                <img v-if="showImage" :src="this.goods.img" class="avatar" >
                 <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                 </el-upload>
-                <span>点击上传商品图片，图片大小不超过1MB</span>
             </div>
         </el-col>
         
@@ -30,7 +29,7 @@
             <div class="abstract_auto">
             <el-input
             type="textarea"
-            placeholder="请输入标题"
+            placeholder="请输入标题，不低于2字，不超过80字"
             :minlength=2
             :maxlength=80
             :rows=4
@@ -44,7 +43,7 @@
             :maxlength=140
             :rows=5
             type="textarea"
-            placeholder="请输入摘要"
+            placeholder="请输入摘要，不低于2字，不超过140字"
             v-model="goods.introduction">
             </el-input>
             </div>
@@ -54,32 +53,37 @@
                     <el-radio label="address">图片地址</el-radio>
                 </el-radio-group>
                 <br/>
+                <div v-if="method=='upload'" class="goods-address">
                 <el-alert
-                    title="本地上传模式下，点击左侧图标上传商品图片"
+                    title="本地上传模式下，点击左侧图标上传商品图片,图片大小不超过1MB"
                     type="error"
-                    v-if="method=='upload'"
-                    class="address"
+                   
+                    class="goods-address"
                     :closable="false"
                     >
                 </el-alert>
-                <div>
-                <el-input class="address"
+                </div>
+                <div v-if="method=='address'" class="goods-address">
+                <el-input 
                 :minlength=2
                 :maxlength=1000
-                v-model="netImage"
-                placeholder="请输入网络图片地址，长度<200，如要上传本地图片请选择本地上传模式"
-                v-if="method=='address'">
+                v-model="goods.img"
+                placeholder="请输入网络图片地址，长度<1000，如要上传本地图片请选择本地上传模式"
+                >
                 </el-input>
                 </div>
-                <span class="label">[价格]</span><br/>
-                <span class="price">￥</span>
+                
+                <span class="label">[价格]</span> (<span class="price">￥</span>)
+                <div class="price-box">
+                    
                  <el-input
                  type="number"
                  v-model="goods.price"
                  min="0"
-                 class="number"
                  >
-            </el-input>
+                </el-input>
+                
+                </div>
              <div class="bg-purple-light">
                 <div class="abstract_auto ">
                     <span class="label">[商品详情]</span><br/>
@@ -88,14 +92,14 @@
                     :maxlength=1000
                     :rows=20
                     type="textarea"
-                    placeholder="请输入商品详情正文"
+                    placeholder="请输入商品详情正文，不低于2字，不超过1000字"
                     v-model="goods.detail">
                     </el-input>
                 </div>
             </div>
             <br/>
              <el-button plain @click="cancel">取消</el-button>
-            <el-button v-if="this.$route.name=='puton'" type="primary" plain @click="publish">完发布成</el-button>
+            <el-button v-if="this.$route.name=='puton'" type="primary" plain @click="publish">完成发布</el-button>
             <el-button v-if="this.$route.name=='modify'" type="primary" plain @click="modify">完成编辑</el-button>
         </el-col>
         <el-col :span="2"><div class="min-height"></div></el-col>
@@ -115,48 +119,72 @@ export default {
                 img:'',
 
             },
-            showImage:'',//用于展示的地址
+            showImage:false,//用于展示的地址
             method:"upload",//默认本地上传
-            not_upload:false,
-            netImage:''
          }
 
     },
     mounted:function(){
-        var goodsid=this.$route.params.id
-        if(this.$route.name=='modify'&&goodsid){
-            console.log('参数')
-            this.$api.get("goods/info/"+goodsid,null,
-            response=>{
-                this.goods=response.data
-                this.showImage=response.data.img
-                this.method='address'
-                this.not_upload=true
-                this.netImage=response.data.img
-
-            },null)
-
-        }
+        this.loadInfo()
     },
     watch:{
-        netImage:function(value){
-            this.showImage=value
-            this.goods.img=value
-        },
        method:function(value){
             if(value=='upload'){
                 this.netImage=''
             }
-        }
+        },
+        'goods.img':function(){
+            this.showImage=this.testImage()
+        },
+     $route:function(to,from){
+         console.log(to)
+         this.loadInfo()
+     }
     },
     created:function(){
 
     },
     methods: {
+        trim(str){
+             str=str.replace(/^\s+|\s+$/g, "")
+            return str
+            console.log("trim: "+str)
+        },
+        testImage(){
+            if(typeof(this.goods.img)=='undefined'||this.goods.img==null){
+                return false;
+            }
+            if(this.trim(this.goods.img)==''){
+                return false;
+            }
+            return true
+        },
+        loadInfo(){
+            var goodsid=this.$route.params.id
+            if(this.$route.name=='modify'&&goodsid){
+                console.log('参数')
+                this.$api.get("goods/info/"+goodsid,null,
+                response=>{
+                    this.goods=response.data
+                    this.method='address'
+
+                },null)
+
+            }else{
+                this.goods={
+                    goodsid:-1,
+                    title:'',
+                    price:0.0,
+                    introduction:'',
+                    detail:'',
+                    img:'',
+                }
+                this.method="upload"//默认本地上传
+            }
+        },
         handleAvatarSuccess(res, file) {
             if(res.success===true){
-                this.goods.img=res.data.image//上传成功后在服务器上的名称
-                this.showImage = URL.createObjectURL(file.raw);
+                this.goods.img="/images/show/"+res.data.image//上传成功后在服务器上的名称
             }else{
                 if(res.code==1){
                     this.$message({
@@ -180,11 +208,13 @@ export default {
 
             if (!(isJPG||isPNG)) {
             this.$message.error('上传图片只能是 PNG或JPG 格式!');
+            return false;
             }
             if (!isLt1M) {
             this.$message.error('上传图片大小不能超过 1MB!');
+            return false;
             }
-            return (isJPG||isPNG) && isLt1M;
+            return true;
         },
         goBack:function(){
             window.history.length>1
@@ -194,17 +224,12 @@ export default {
         }, 
         changeMethod:function(value){
             console.log("选择的按钮"+value)
-            if(value=='upload'){
-                this.not_upload=false;
-            }else{
-                this.not_upload=true;
-            }
         },
         cancel:function(){
             this.goBack()
         },
         testGoodsValid(){
-            if(this.goods.title==null||this.goods.title.length<2||this.goods.introduction.length>80){
+            if(this.goods.title==null||this.goods.title.length<2||this.goods.title.length>80){
                 return false
             }
             if(this.goods.introduction==null||this.goods.introduction.length<2||this.goods.introduction.length>140){
@@ -216,15 +241,27 @@ export default {
             if(this.goods.price==null||this.goods.price<0||this.goods.price>1000000000){
                 return false
             }
+            var num=Number(this.goods.price)
+            this.goods.price=num.toFixed(2)
+            console.log("商品价格: "+this.goods.price)
+            if(typeof(this.goods.img)=='undefined'){
+                return false
+            }
+            var realImg=this.goods.img.replace(/^\s+|\s+$/g, "")
+            console.log("图片地址是 "+realImg+"。")
+            this.goods.img=realImg;
+            if(this.goods.img==''){
+                return false
+            }
             return true
         },
         modify:function(){
-            if(!this.not_upload){
-                this.goods.img="/images/show/"+this.goods.img //当通过本地上传的方式，需要加上路径
-            }
+            // if(!this.not_upload){
+            //     this.goods.img="/images/show/"+this.goods.img //当通过本地上传的方式，需要加上路径
+            // }
             if(!this.testGoodsValid()){
                 this.$message({
-                    message:"输入的商品的信息有误，请重新检查",
+                    message:"输入的商品的信息不完整，请检查并重新输入",
                     type:"info"
                 })
                 return
@@ -239,10 +276,17 @@ export default {
             },null)
         },
         publish:function(){
-            if(!this.not_upload){
-                this.goods.img="/images/show/"+this.goods.img //当通过本地上传的方式，需要加上路径
+            // if(!this.not_upload){
+            //     this.goods.img="/images/show/"+this.goods.img //当通过本地上传的方式，需要加上路径
+            // }
+            if(!this.testGoodsValid()){
+                this.$message({
+                    message:"输入的商品的信息不完整，请检查并重新输入",
+                    type:"info"
+                })
+                return
             }
-            if(this.goods.goodsid==-1){
+            if(typeof(this.goods.goodsid)=='undefined'||this.goods.goodsid==-1){
                  this.$api.post("user/seller/goods/puton/",this.goods,response=>{
                      console.log('发布商品成功')
                      this.$message({
@@ -285,15 +329,17 @@ export default {
         width: 80%;
         height: auto;
     }
-    .number{
-        width:100px
+    .goods-number{
+        width:100px;
+        height:40px;
     }
     .label{
         font-size:  1.17em;
         font-weight: bold;
     }
-    .address{
-        width:600px
+    .goods-address{
+        width:600px;
+        height: 40px;
     }
 
     .text-content{
@@ -356,8 +402,8 @@ export default {
   .avatar-uploader .el-upload:hover {
     border-color: #409EFF;
   }
-  .avatar-uploader-icon {
-    font-size:100px;
+  .avatar-uploader-icon{
+    font-size:400px;
     color: #8c939d;
     width: 400px;
     height: 400px;
@@ -368,6 +414,10 @@ export default {
     width: 400px;
     height: 400px;
     display: block;
+  }
+  .price-box{
+      width:150px;
+      height:50px;
   }
 </style>
 

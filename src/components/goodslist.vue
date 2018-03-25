@@ -21,7 +21,7 @@
                     <span class="el-icon-success purchased">已购买</span>
                 </div>
                 <div class="clear"></div>
-                <div class="list-title"><router-link :to="{name:'show', params: { id: index.goodsid }}">{{index.title.slice(0,54)}}</router-link></div>
+                <div class="list-title"><router-link :to="{name:'show', params: { id: index.goodsid }}">{{index.title.slice(0,50)}}</router-link></div>
 
 
 

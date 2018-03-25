@@ -32,7 +32,7 @@
                 <el-input-number v-model="quantity" :min="1" :max="999" label="quantity"></el-input-number>
                 <el-button type="primary" @click="addtoCart(quantity)">加入购物车</el-button>
             </div>
-             <el-button icon="el-icon-delete" v-if="this.$store.state.authorization&&(this.$store.state.role=='seller')&&(goods.quantity==0)" @click="putoff">删除商品</el-button>
+             <el-button icon="el-icon-delete" v-if="this.$store.state.authorization&&(this.$store.state.role=='seller')&&(goods.sold_quantity==0)" @click="putoff">删除商品</el-button>
             <el-button icon="el-icon-edit" v-if="this.$store.state.authorization&&(this.$store.state.role=='seller')" type="primary" @click="edit">编辑商品</el-button>
            
 
@@ -57,7 +57,7 @@ export default {
     data:function(){
         return {
             goods:{
-                goodsid:1,
+                goodsid:-1,
                 title:'标题',
                 price: 0,
                 introduction:'无 ',
@@ -132,8 +132,9 @@ export default {
                         this.$message({
                         type: 'success',
                         message: '删除商品成功!'})
-                        },null)
                         this.$router.push("/")//返回到首页
+                        },null)
+                       
             }).catch(() => {
                         this.$message({
                         type: 'success',

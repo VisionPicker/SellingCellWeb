@@ -12,12 +12,12 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/api/*':{
-        target:'http://localhost:8080',
+        target:'http://localhost:8807',
         secure:false,
         changeOrigin:false,
       },
       '/images/*':{
-        target:'http://localhost:8080',
+        target:'http://localhost:8807',
         secure:false,
         changeOrigin:false,
       }
